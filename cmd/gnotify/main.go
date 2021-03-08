@@ -9,9 +9,12 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/go-chi/chi"
 	"github.com/jessevdk/go-flags"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/vliubezny/gnotify/internal/server/graphql"
 )
 
 var errTerminated = errors.New("terminated")
@@ -47,11 +50,15 @@ func main() {
 	logrus.Info("starting service")
 	logrus.Infof("%+v", opts) // can print secrets!
 
+	r := chi.NewMux()
+
+	if err := graphql.SetupRouter(r); err != nil {
+		logrus.WithError(err).Fatal("failed to setup graphql")
+	}
+
 	srv := http.Server{
-		Addr: fmt.Sprintf("%s:%d", opts.Host, opts.Port),
-		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.WriteHeader(http.StatusOK)
-		}),
+		Addr:    fmt.Sprintf("%s:%d", opts.Host, opts.Port),
+		Handler: r,
 	}
 
 	gr, _ := errgroup.WithContext(context.Background())

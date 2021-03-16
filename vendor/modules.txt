@@ -10,25 +10,31 @@ github.com/go-chi/chi
 # github.com/golang/mock v1.5.0
 ## explicit
 github.com/golang/mock/gomock
-# github.com/graphql-go/graphql v0.7.9
+# github.com/graph-gophers/graphql-go v0.0.0-20210306090651-bd703c223f03
 ## explicit
-github.com/graphql-go/graphql
-github.com/graphql-go/graphql/gqlerrors
-github.com/graphql-go/graphql/language/ast
-github.com/graphql-go/graphql/language/kinds
-github.com/graphql-go/graphql/language/lexer
-github.com/graphql-go/graphql/language/location
-github.com/graphql-go/graphql/language/parser
-github.com/graphql-go/graphql/language/printer
-github.com/graphql-go/graphql/language/source
-github.com/graphql-go/graphql/language/typeInfo
-github.com/graphql-go/graphql/language/visitor
+github.com/graph-gophers/graphql-go
+github.com/graph-gophers/graphql-go/errors
+github.com/graph-gophers/graphql-go/internal/common
+github.com/graph-gophers/graphql-go/internal/exec
+github.com/graph-gophers/graphql-go/internal/exec/packer
+github.com/graph-gophers/graphql-go/internal/exec/resolvable
+github.com/graph-gophers/graphql-go/internal/exec/selected
+github.com/graph-gophers/graphql-go/internal/query
+github.com/graph-gophers/graphql-go/internal/schema
+github.com/graph-gophers/graphql-go/internal/validation
+github.com/graph-gophers/graphql-go/introspection
+github.com/graph-gophers/graphql-go/log
+github.com/graph-gophers/graphql-go/trace
 # github.com/jessevdk/go-flags v1.4.0
 ## explicit
 github.com/jessevdk/go-flags
 # github.com/magefile/mage v1.10.0
 github.com/magefile/mage/mg
 github.com/magefile/mage/sh
+# github.com/opentracing/opentracing-go v1.1.0
+github.com/opentracing/opentracing-go
+github.com/opentracing/opentracing-go/ext
+github.com/opentracing/opentracing-go/log
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
 # github.com/sirupsen/logrus v1.8.0

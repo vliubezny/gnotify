@@ -4,24 +4,32 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
-	"github.com/graphql-go/graphql"
+	graphql "github.com/graph-gophers/graphql-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+type resolver struct{}
+
+func (*resolver) Hello() string {
+	return "world"
+}
+
 func TestServer_graphqlHandler(t *testing.T) {
-	schema, err := graphql.NewSchema(graphql.SchemaConfig{
-		Query: graphql.NewObject(graphql.ObjectConfig{Name: "Query", Fields: graphql.Fields{
-			"hello": &graphql.Field{
-				Type: graphql.String,
-				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					return "world", nil
-				},
-			},
-		}}),
-	})
+	s := `
+		schema {
+			query: Query
+		}
+
+		type Query {
+			hello: String!
+		}
+	`
+
+	schema, err := graphql.ParseSchema(s, &resolver{})
 	require.NoError(t, err)
 
 	srv := &server{
@@ -29,7 +37,8 @@ func TestServer_graphqlHandler(t *testing.T) {
 	}
 
 	rec := httptest.NewRecorder()
-	r := httptest.NewRequest(http.MethodGet, "/?query={hello}", nil)
+	b := strings.NewReader(`{"query":"{hello}"}`)
+	r := httptest.NewRequest(http.MethodPost, "/", b)
 
 	srv.graphqlHandler(rec, r)
 

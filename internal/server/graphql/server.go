@@ -7,13 +7,13 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi"
-	"github.com/graphql-go/graphql"
+	graphql "github.com/graph-gophers/graphql-go"
 	"github.com/sirupsen/logrus"
 	"github.com/vliubezny/gnotify/internal/auth"
 )
 
 type server struct {
-	schema graphql.Schema
+	schema *graphql.Schema
 }
 
 // SetupRouter setups routes and handlers.
@@ -33,7 +33,7 @@ func SetupRouter(r chi.Router, authenticator auth.Authenticator) error {
 		jwtAuthMiddleware(authenticator),
 	)
 
-	r.Get("/graphql", srv.graphqlHandler)
+	r.Post("/graphql", srv.graphqlHandler)
 
 	return nil
 }

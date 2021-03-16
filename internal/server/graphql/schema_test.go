@@ -1,28 +1,33 @@
 package graphql
 
 import (
+	"context"
+	"encoding/json"
 	"testing"
 
-	"github.com/graphql-go/graphql"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+var ctx = context.Background()
 
 func Test_Schema(t *testing.T) {
 	testCases := []struct {
 		desc  string
 		query string
-		data  interface{}
+		data  string
 	}{
 		{
 			desc:  "query language",
 			query: `{language{name,code}}`,
-			data: map[string]interface{}{
-				"language": map[string]interface{}{
-					"code": "ru",
-					"name": "Russian",
-				},
-			},
+			data: `{
+					"data": {
+						"language": {
+							"code":"ru",
+							"name":"Russian"
+						}
+					}
+				}`,
 		},
 	}
 	for _, tc := range testCases {
@@ -30,13 +35,12 @@ func Test_Schema(t *testing.T) {
 			s, err := NewSchema()
 			require.NoError(t, err)
 
-			result := graphql.Do(graphql.Params{
-				Schema:        s,
-				RequestString: tc.query,
-			})
+			result := s.Exec(ctx, tc.query, "", nil)
 
-			assert.Empty(t, result.Errors)
-			assert.Equal(t, tc.data, result.Data)
+			json, err := json.Marshal(result)
+			require.NoError(t, err)
+
+			assert.JSONEq(t, tc.data, string(json))
 		})
 	}
 }

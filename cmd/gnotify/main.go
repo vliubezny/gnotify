@@ -14,6 +14,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
+	"github.com/vliubezny/gnotify/internal/auth"
 	"github.com/vliubezny/gnotify/internal/server/graphql"
 )
 
@@ -51,8 +52,9 @@ func main() {
 	logrus.Infof("%+v", opts) // can print secrets!
 
 	r := chi.NewMux()
+	a := auth.New(opts.SignKey)
 
-	if err := graphql.SetupRouter(r); err != nil {
+	if err := graphql.SetupRouter(r, a); err != nil {
 		logrus.WithError(err).Fatal("failed to setup graphql")
 	}
 

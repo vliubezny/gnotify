@@ -3,7 +3,10 @@ module github.com/vliubezny/gnotify
 go 1.15
 
 require (
+	github.com/davecgh/go-spew v1.1.1
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-chi/chi v1.5.4
+	github.com/golang/mock v1.5.0
 	github.com/graphql-go/graphql v0.7.9
 	github.com/jessevdk/go-flags v1.4.0
 	github.com/sirupsen/logrus v1.8.0

@@ -18,13 +18,26 @@ func Test_Schema(t *testing.T) {
 		data  string
 	}{
 		{
-			desc:  "query language",
-			query: `{language{name,code}}`,
+			desc: "query current user language",
+			query: `{
+					currentUser {
+						settings {
+							language {
+								name
+								code
+							}
+						}
+					}
+				}`,
 			data: `{
 					"data": {
-						"language": {
-							"code":"ru",
-							"name":"Russian"
+						"currentUser": {
+							"settings": {
+								"language": {
+									"code": "ru",
+									"name": "Russian"
+								}
+							}
 						}
 					}
 				}`,

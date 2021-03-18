@@ -3,10 +3,38 @@ schema {
 }
 
 type Query {
+  currentUser: User!
+}
+
+type User {
+  id: ID!
+  settings: Settings!
+  devices: [Device!]!
+}
+
+type Settings {
   language: Language!
 }
 
 type Language {
   code: String!
   name: String!
+}
+
+type Device {
+ id: ID!
+ name: String!
+ settings: NotificationSettings!
+}
+
+type NotificationSettings {
+  priceChanged: Boolean!
+  frequency: Frequency!
+}
+
+enum Frequency {
+  HOURLY
+  DAILY
+  WEEKLY
+  NEVER
 }

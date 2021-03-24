@@ -27,6 +27,8 @@ var opts = struct {
 	LogLevel string `long:"log.level" env:"LOG_LEVEL" default:"debug" description:"Log level" choice:"debug" choice:"info" choice:"warning" choice:"error"`
 
 	SignKey string `long:"auth.signkey" env:"AUTH_SIGN_KEY" default:"changeme" description:"sign key for JWT"`
+
+	MongoDBURI string `long:"mongodb.uri" env:"MONGODB_URI" default:"mongodb://localhost:27017"`
 }{}
 
 func main() {

@@ -1,0 +1,25 @@
+version: "3.9"
+
+services:
+  gnotify:
+    image: gnotify-local:latest
+    container_name: gnotify
+    restart: always
+    ports:
+      - "8080:8080"
+
+  gnotify-db:
+    image: mongo:4
+    container_name: gnotify-db
+    restart: always
+    ports:
+      - "27017:27017"
+
+  gnotify-db-admin:
+    image: mongoclient/mongoclient
+    container_name: gnotify-db-admin
+    restart: always
+    environment: 
+      - MONGOCLIENT_DEFAULT_CONNECTION_URL=mongodb://gnotify-db:27017
+    ports:
+      - "3000:3000"

@@ -78,7 +78,7 @@ install-all: install-mockgen
 
 .PHONY: dev-start
 dev-start:
-	docker-compose -f scripts/docker-compose.yml up -d gnotify-db
+	docker-compose -f scripts/docker-compose.yml up -d gnotify-db gnotify-db-admin
 
 .PHONY: dev-stop
 dev-stop:

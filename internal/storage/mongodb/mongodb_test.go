@@ -1,3 +1,5 @@
+//+build integration
+
 package mongodb
 
 import (
@@ -58,7 +60,7 @@ func setup() func() {
 
 	uri := fmt.Sprintf("mongodb://%s:%s", host, port)
 
-	s, err := New(uri)
+	s, err := New(uri, "gnotify")
 	if err != nil {
 		logrus.WithError(err).Fatal("failed to setup mongodb storage")
 	}
@@ -79,7 +81,7 @@ func TestMongoStorage_GetUser(t *testing.T) {
 		Language: "en",
 	}
 
-	_, err := ms.client.Database(db).Collection(users).InsertOne(ctx, bson.D{
+	_, err := ms.db.Collection(users).InsertOne(ctx, bson.D{
 		{Key: "id", Value: u.ID},
 		{Key: "lang", Value: u.Language},
 	})

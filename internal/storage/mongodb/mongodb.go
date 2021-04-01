@@ -15,22 +15,23 @@ import (
 )
 
 const (
-	db    = "gnotify"
 	users = "users"
 )
 
 type mongoStorage struct {
-	client *mongo.Client
+	db *mongo.Database
 }
 
 // New creates mongodb storage.
-func New(uri string) (storage.Storage, error) {
+func New(uri, db string) (storage.Storage, error) {
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
 		return nil, err
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
 	err = client.Connect(ctx)
 	if err != nil {
 		return nil, err
@@ -41,13 +42,30 @@ func New(uri string) (storage.Storage, error) {
 		return nil, err
 	}
 
-	return &mongoStorage{
-		client: client,
-	}, nil
+	ms := &mongoStorage{
+		db: client.Database(db),
+	}
+
+	if err = createScheme(ms.db); err != nil {
+		return nil, err
+	}
+
+	return ms, nil
+}
+
+func createScheme(db *mongo.Database) error {
+	ctx := context.Background()
+
+	_, err := db.Collection(users).Indexes().CreateOne(ctx, mongo.IndexModel{
+		Keys:    bson.D{{Key: "id", Value: 1}},
+		Options: options.Index().SetName("id").SetUnique(true),
+	})
+
+	return err
 }
 
 func (s *mongoStorage) GetUser(ctx context.Context, id int64) (model.User, error) {
-	r := s.client.Database("gnotify").Collection("users").FindOne(ctx, bson.M{"id": id})
+	r := s.db.Collection(users).FindOne(ctx, bson.M{"id": id})
 	if r.Err() != nil {
 		return model.User{}, fmt.Errorf("failed to get user: %w", r.Err())
 	}

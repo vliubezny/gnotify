@@ -7,6 +7,8 @@ import (
 	"github.com/vliubezny/gnotify/internal/model"
 )
 
+//go:generate mockgen -destination=./mock/mock.go -package=mock -source=storage.go
+
 var (
 	// ErrNotFound states that record was not found in storage.
 	ErrNotFound = errors.New("not found")

@@ -16,6 +16,8 @@ import (
 
 	"github.com/vliubezny/gnotify/internal/auth"
 	"github.com/vliubezny/gnotify/internal/server/graphql"
+	"github.com/vliubezny/gnotify/internal/service"
+	"github.com/vliubezny/gnotify/internal/storage/mongodb"
 )
 
 var errTerminated = errors.New("terminated")
@@ -28,7 +30,8 @@ var opts = struct {
 
 	SignKey string `long:"auth.signkey" env:"AUTH_SIGN_KEY" default:"changeme" description:"sign key for JWT"`
 
-	MongoDBURI string `long:"mongodb.uri" env:"MONGODB_URI" default:"mongodb://localhost:27017"`
+	MongoDBURI  string `long:"mongodb.uri" env:"MONGODB_URI" default:"mongodb://localhost:27017"`
+	MongoDBName string `long:"mongodb.name" env:"MONGODB_NAME" default:"gnotify"`
 }{}
 
 func main() {
@@ -53,10 +56,17 @@ func main() {
 	logrus.Info("starting service")
 	logrus.Infof("%+v", opts) // can print secrets!
 
+	stg, err := mongodb.New(opts.MongoDBURI, opts.MongoDBName)
+	if err != nil {
+		logrus.WithError(err).Fatal("failed to setup storage")
+	}
+
+	svc := service.New(stg)
+
 	r := chi.NewMux()
 	a := auth.New(opts.SignKey)
 
-	if err := graphql.SetupRouter(r, a); err != nil {
+	if err := graphql.SetupRouter(r, a, svc); err != nil {
 		logrus.WithError(err).Fatal("failed to setup graphql")
 	}
 

@@ -13,14 +13,6 @@ import (
 	"golang.org/x/text/language/display"
 )
 
-// Frequency enum.
-const (
-	Hourly = "HOURLY"
-	Daily  = "DAILY"
-	Weekly = "WEEKLY"
-	Never  = "NEVER"
-)
-
 // User represents user of the service.
 type User struct {
 	ID       graphql.ID

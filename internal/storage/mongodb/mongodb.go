@@ -73,18 +73,12 @@ func (s *mongoStorage) GetUser(ctx context.Context, id int64) (model.User, error
 		return model.User{}, fmt.Errorf("failed to get user: %w", r.Err())
 	}
 
-	var u struct {
-		ID   int64
-		Lang string
-	}
+	var u user
 	if err := r.Decode(&u); err != nil {
 		return model.User{}, fmt.Errorf("failed to get user: %w", err)
 	}
 
-	return model.User{
-		ID:       u.ID,
-		Language: u.Lang,
-	}, nil
+	return u.toModel(), nil
 }
 
 func (s *mongoStorage) UpsertUser(ctx context.Context, user model.User) error {
@@ -112,27 +106,17 @@ func (s *mongoStorage) GetUsers(ctx context.Context) ([]model.User, error) {
 	}
 	defer cursor.Close(ctx)
 
-	users := make([]model.User, 0, cursor.RemainingBatchLength())
-
-	for cursor.Next(ctx) {
-		id, ok := cursor.Current.Lookup("id").Int64OK()
-		if !ok {
-			return nil, fmt.Errorf("missing 'id' field for user document: %s", cursor.Current.Lookup("_id"))
-		}
-
-		lang, ok := cursor.Current.Lookup("lang").StringValueOK()
-		if !ok {
-			return nil, fmt.Errorf("missing 'lang' field for user document: %s", cursor.Current.Lookup("_id"))
-		}
-
-		users = append(users, model.User{ID: id, Language: lang})
-	}
-
-	if cursor.Err() != nil {
+	var users []user
+	if err := cursor.All(ctx, &users); err != nil {
 		return nil, fmt.Errorf("failed to read users: %w", err)
 	}
 
-	return users, nil
+	mUsers := make([]model.User, len(users))
+	for i := range users {
+		mUsers[i] = users[i].toModel()
+	}
+
+	return mUsers, nil
 }
 
 func (s *mongoStorage) DeleteUser(ctx context.Context, id int64) error {

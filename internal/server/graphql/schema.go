@@ -8,45 +8,76 @@ import (
 
 	graphql "github.com/graph-gophers/graphql-go"
 	"github.com/vliubezny/gnotify/internal/auth"
+	"github.com/vliubezny/gnotify/internal/model"
 	"github.com/vliubezny/gnotify/internal/service"
 	"golang.org/x/text/language"
 	"golang.org/x/text/language/display"
 )
 
-// User represents user of the service.
-type User struct {
-	ID       graphql.ID
-	Settings Settings
-	Devices  []Device
+type userResolver struct {
+	user model.User
 }
 
-// Settings represents user settings.
-type Settings struct {
-	Language Language
+func (r *userResolver) ID() graphql.ID {
+	return graphql.ID(strconv.FormatInt(r.user.ID, 10))
 }
 
-// Language represents user language of choice.
-type Language struct {
+func (r *userResolver) Settings() settingsResolver {
+	return settingsResolver{
+		Language: languageResolver{Code: r.user.Language},
+	}
+}
+
+func (r *userResolver) Devices() []deviceResolver {
+	dr := make([]deviceResolver, len(r.user.Devices))
+
+	for i, d := range r.user.Devices {
+		dr[i] = deviceResolver{d}
+	}
+
+	return dr
+}
+
+type settingsResolver struct {
+	Language languageResolver
+}
+
+type languageResolver struct {
 	Code string
 }
 
-// Device represents user device.
-type Device struct {
-	ID       graphql.ID
-	Name     string
-	Settings NotificationSettings
-}
-
-// NotificationSettings represents notification settings for the device.
-type NotificationSettings struct {
-	PriceChanged bool
-	Frequency    string
-}
-
 // Name returns language name in plain English.
-func (lang Language) Name() string {
-	tag := language.Make(lang.Code)
+func (r languageResolver) Name() string {
+	tag := language.Make(r.Code)
 	return display.English.Tags().Name(tag)
+}
+
+type deviceResolver struct {
+	device model.Device
+}
+
+func (r deviceResolver) ID() graphql.ID {
+	return graphql.ID(r.device.ID)
+}
+
+func (r deviceResolver) Name() string {
+	return r.device.Name
+}
+
+func (r deviceResolver) Settings() notificationSettingsResolver {
+	return notificationSettingsResolver{settings: r.device.Settings}
+}
+
+type notificationSettingsResolver struct {
+	settings model.NotificationSettings
+}
+
+func (r notificationSettingsResolver) PriceChanged() bool {
+	return r.settings.PriceChanged
+}
+
+func (r notificationSettingsResolver) Frequency() string {
+	return r.settings.Frequency
 }
 
 // RootResolver defines root resolvers.
@@ -55,18 +86,14 @@ type RootResolver struct {
 }
 
 // CurrentUser resolves current user data.
-func (r *RootResolver) CurrentUser(ctx context.Context) (User, error) {
+func (r *RootResolver) CurrentUser(ctx context.Context) (*userResolver, error) {
 	p := ctx.Value(principalKey{}).(auth.Principal)
 	u, err := r.svc.GetUser(ctx, p.UserID)
 	if err != nil {
-		return User{}, fmt.Errorf("failed to resolve current user: %w", err)
+		return nil, fmt.Errorf("failed to resolve current user: %w", err)
 	}
 
-	var user User
-	user.ID = graphql.ID(strconv.FormatInt(u.ID, 10))
-	user.Settings.Language.Code = u.Language
-
-	return user, nil
+	return &userResolver{user: u}, nil
 }
 
 // NewSchema parses and creates new graphql schema.

@@ -16,6 +16,21 @@ import (
 var ctx = context.Background()
 
 func Test_Schema(t *testing.T) {
+	user := model.User{
+		ID:       1,
+		Language: "ru",
+		Devices: []model.Device{
+			{
+				ID:   "132323",
+				Name: "Chrome",
+				Settings: model.NotificationSettings{
+					Frequency:    model.Daily,
+					PriceChanged: true,
+				},
+			},
+		},
+	}
+
 	testCases := []struct {
 		desc      string
 		principal auth.Principal
@@ -27,13 +42,21 @@ func Test_Schema(t *testing.T) {
 		{
 			desc:      "query current user language",
 			principal: auth.Principal{UserID: 1},
-			rUser:     model.User{ID: 1, Language: "ru"},
+			rUser:     user,
 			query: `{
 					currentUser {
 						settings {
 							language {
 								name
 								code
+							}
+						}
+						devices {
+							id
+							name
+							settings {
+								frequency
+								priceChanged
 							}
 						}
 					}
@@ -46,7 +69,17 @@ func Test_Schema(t *testing.T) {
 									"code": "ru",
 									"name": "Russian"
 								}
-							}
+							},
+							"devices": [
+								{
+									"id": "132323",
+									"name": "Chrome",
+									"settings": {
+										"frequency": "DAILY",
+										"priceChanged": true
+									}
+								}
+							]
 						}
 					}
 				}`,

@@ -91,3 +91,18 @@ func (mr *MockStorageMockRecorder) DeleteUser(ctx, id interface{}) *gomock.Call 
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockStorage)(nil).DeleteUser), ctx, id)
 }
+
+// AddDevice mocks base method
+func (m *MockStorage) AddDevice(ctx context.Context, userId int64, input model.Device) (model.Device, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddDevice", ctx, userId, input)
+	ret0, _ := ret[0].(model.Device)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddDevice indicates an expected call of AddDevice
+func (mr *MockStorageMockRecorder) AddDevice(ctx, userId, input interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDevice", reflect.TypeOf((*MockStorage)(nil).AddDevice), ctx, userId, input)
+}

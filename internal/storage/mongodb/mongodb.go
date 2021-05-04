@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
@@ -130,4 +131,39 @@ func (s *mongoStorage) DeleteUser(ctx context.Context, id int64) error {
 	}
 
 	return nil
+}
+
+func (s *mongoStorage) AddDevice(ctx context.Context, userId int64, input model.Device) (model.Device, error) {
+	d := device{
+		ID:           primitive.NewObjectID(),
+		Name:         input.Name,
+		PriceChanged: input.Settings.PriceChanged,
+		Frequency:    input.Settings.Frequency,
+	}
+
+	r := s.db.Collection(users).FindOneAndUpdate(ctx, bson.M{"id": userId},
+		bson.M{
+			"$push": bson.D{
+				{Key: "devices", Value: d},
+			},
+		}, options.FindOneAndUpdate().SetReturnDocument(options.After).
+			SetProjection(bson.M{
+				"devices": bson.D{
+					{Key: "$slice", Value: -1},
+				},
+			}))
+
+	if r.Err() != nil {
+		if r.Err() == mongo.ErrNoDocuments {
+			return model.Device{}, storage.ErrNotFound
+		}
+		return model.Device{}, fmt.Errorf("failed to add device: %w", r.Err())
+	}
+
+	var u user
+	if err := r.Decode(&u); err != nil || len(u.Devices) == 0 {
+		return model.Device{}, fmt.Errorf("failed to add device: %w", err)
+	}
+
+	return u.Devices[0].toModel(), nil
 }

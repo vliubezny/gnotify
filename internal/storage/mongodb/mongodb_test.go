@@ -166,3 +166,37 @@ func TestMongoStorage_DeleteUser(t *testing.T) {
 	err = ms.DeleteUser(ctx, 100500)
 	assert.True(t, errors.Is(err, storage.ErrNotFound), fmt.Sprintf("wanted %s got %s", storage.ErrNotFound, err))
 }
+
+func TestMongoStorage_AddDevice(t *testing.T) {
+	defer cleanup(t)
+
+	newUser := model.User{
+		ID:       1,
+		Language: "en",
+	}
+
+	require.NoError(t, ms.UpsertUser(ctx, newUser))
+
+	inputDevice := model.Device{
+		Name: "Chrome",
+		Settings: model.NotificationSettings{
+			Frequency:    model.Daily,
+			PriceChanged: true,
+		},
+	}
+
+	newDevice, err := ms.AddDevice(ctx, newUser.ID, inputDevice)
+	require.NoError(t, err)
+
+	assert.NotEmpty(t, newDevice.ID)
+	assert.Equal(t, inputDevice.Name, newDevice.Name)
+	assert.Equal(t, inputDevice.Settings, newDevice.Settings)
+
+	user, err := ms.GetUser(ctx, newUser.ID)
+	require.NoError(t, err)
+
+	if assert.NotEmpty(t, user.Devices) {
+		assert.Equal(t, inputDevice.Name, user.Devices[0].Name)
+		assert.Equal(t, inputDevice.Settings, user.Devices[0].Settings)
+	}
+}

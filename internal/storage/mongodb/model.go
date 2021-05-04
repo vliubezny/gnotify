@@ -11,13 +11,6 @@ type user struct {
 	Devices []device `bson:"devices,omitempty"`
 }
 
-type device struct {
-	ID           primitive.ObjectID `bson:"_id"`
-	Name         string             `bson:"name"`
-	PriceChanged bool               `bson:"priceChanged,omitempty"`
-	Frequency    string             `bson:"frequency,omitempty"`
-}
-
 func (u user) toModel() model.User {
 	mUser := model.User{
 		ID:       u.ID,
@@ -28,16 +21,27 @@ func (u user) toModel() model.User {
 		mUser.Devices = make([]model.Device, len(u.Devices))
 
 		for i, d := range u.Devices {
-			mUser.Devices[i] = model.Device{
-				ID:   d.ID.String(),
-				Name: d.Name,
-				Settings: model.NotificationSettings{
-					PriceChanged: d.PriceChanged,
-					Frequency:    d.Frequency,
-				},
-			}
+			mUser.Devices[i] = d.toModel()
 		}
 	}
 
 	return mUser
+}
+
+type device struct {
+	ID           primitive.ObjectID `bson:"_id"`
+	Name         string             `bson:"name"`
+	PriceChanged bool               `bson:"priceChanged,omitempty"`
+	Frequency    string             `bson:"frequency,omitempty"`
+}
+
+func (d device) toModel() model.Device {
+	return model.Device{
+		ID:   d.ID.String(),
+		Name: d.Name,
+		Settings: model.NotificationSettings{
+			PriceChanged: d.PriceChanged,
+			Frequency:    d.Frequency,
+		},
+	}
 }

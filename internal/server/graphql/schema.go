@@ -96,6 +96,34 @@ func (r *RootResolver) CurrentUser(ctx context.Context) (*userResolver, error) {
 	return &userResolver{user: u}, nil
 }
 
+type deviceInput struct {
+	Name         string
+	PriceChanged bool
+	Frequency    string
+}
+
+func (r *RootResolver) AddDeviceForCurrentUser(
+	ctx context.Context,
+	args struct{ Device deviceInput },
+) (*deviceResolver, error) {
+	p := ctx.Value(principalKey{}).(auth.Principal)
+
+	input := model.Device{
+		Name: args.Device.Name,
+		Settings: model.NotificationSettings{
+			PriceChanged: args.Device.PriceChanged,
+			Frequency:    args.Device.Frequency,
+		},
+	}
+
+	device, err := r.svc.AddDevice(ctx, p.UserID, input)
+	if err != nil {
+		return nil, fmt.Errorf("failed to add device to current user: %w", err)
+	}
+
+	return &deviceResolver{device}, nil
+}
+
 // NewSchema parses and creates new graphql schema.
 func NewSchema(svc service.Service) (*graphql.Schema, error) {
 	schema, err := ioutil.ReadFile("../../../static/schema.graphql")

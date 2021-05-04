@@ -91,3 +91,18 @@ func (mr *MockServiceMockRecorder) DeleteUser(ctx, id interface{}) *gomock.Call 
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteUser", reflect.TypeOf((*MockService)(nil).DeleteUser), ctx, id)
 }
+
+// AddDevice mocks base method
+func (m *MockService) AddDevice(ctx context.Context, userId int64, device model.Device) (model.Device, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddDevice", ctx, userId, device)
+	ret0, _ := ret[0].(model.Device)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddDevice indicates an expected call of AddDevice
+func (mr *MockServiceMockRecorder) AddDevice(ctx, userId, device interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddDevice", reflect.TypeOf((*MockService)(nil).AddDevice), ctx, userId, device)
+}

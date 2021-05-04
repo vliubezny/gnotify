@@ -28,6 +28,9 @@ type Service interface {
 
 	// DeleteUser deletes user by ID.
 	DeleteUser(ctx context.Context, id int64) error
+
+	// AddDevice add new device for user
+	AddDevice(ctx context.Context, userId int64, device model.Device) (model.Device, error)
 }
 
 type service struct {
@@ -74,4 +77,8 @@ func (s *service) DeleteUser(ctx context.Context, id int64) error {
 		return fmt.Errorf("failed to delete user: %w", err)
 	}
 	return nil
+}
+
+func (s *service) AddDevice(ctx context.Context, userId int64, device model.Device) (model.Device, error) {
+	return model.Device{}, nil
 }

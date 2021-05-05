@@ -44,45 +44,69 @@ func TestSchema_currentUser(t *testing.T) {
 			principal: auth.Principal{UserID: 1},
 			rUser:     user,
 			query: `{
-					currentUser {
-						settings {
-							language {
-								name
-								code
-							}
-						}
-						devices {
-							id
+				currentUser {
+					settings {
+						language {
 							name
-							settings {
-								frequency
-								priceChanged
-							}
+							code
 						}
 					}
-				}`,
+					devices {
+						id
+						name
+						settings {
+							frequency
+							priceChanged
+						}
+					}
+				}
+			}`,
 			data: `{
-					"data": {
-						"currentUser": {
-							"settings": {
-								"language": {
-									"code": "ru",
-									"name": "Russian"
+				"data": {
+					"currentUser": {
+						"settings": {
+							"language": {
+								"code": "ru",
+								"name": "Russian"
+							}
+						},
+						"devices": [
+							{
+								"id": "132323",
+								"name": "Chrome",
+								"settings": {
+									"frequency": "DAILY",
+									"priceChanged": true
 								}
-							},
-							"devices": [
-								{
-									"id": "132323",
-									"name": "Chrome",
-									"settings": {
-										"frequency": "DAILY",
-										"priceChanged": true
-									}
-								}
-							]
+							}
+						]
+					}
+				}
+			}`,
+		},
+		{
+			desc:      "query current user language error",
+			principal: auth.Principal{UserID: 1},
+			rUser:     model.User{},
+			rErr:      assert.AnError,
+			query: `{
+				currentUser {
+					settings {
+						language {
+							code
 						}
 					}
-				}`,
+				}
+			}`,
+			data: `{
+				"data": null,
+				"errors": [
+					{
+						"message": "failed to resolve current user: assert.AnError general error for testing",
+						"path": ["currentUser"]
+					}
+				]
+			}`,
 		},
 	}
 	for _, tc := range testCases {
@@ -96,7 +120,7 @@ func TestSchema_currentUser(t *testing.T) {
 
 			c := context.WithValue(ctx, principalKey{}, tc.principal)
 
-			svc.EXPECT().GetUser(gomock.Any(), tc.rUser.ID).Return(tc.rUser, tc.rErr)
+			svc.EXPECT().GetUser(gomock.Any(), tc.principal.UserID).Return(tc.rUser, tc.rErr)
 
 			result := s.Exec(c, tc.query, "", nil)
 
@@ -159,6 +183,40 @@ func TestSchema_addDeviceForCurrentUser(t *testing.T) {
 						}
 					}
 				}
+			}`,
+		},
+		{
+			desc:      "addDeviceForCurrentUser error",
+			principal: auth.Principal{UserID: 1},
+			vars: map[string]interface{}{
+				"device": map[string]interface{}{
+					"name":         "Chrome",
+					"priceChanged": true,
+					"frequency":    "DAILY",
+				},
+			},
+			rDevice: device,
+			rErr:    assert.AnError,
+			query: `mutation ($device: DeviceInput!) {
+				addDeviceForCurrentUser(device: $device) {
+					id
+					name
+					settings {
+						frequency
+						priceChanged
+					}
+				}
+			}`,
+			data: `{
+				"data": {
+					"addDeviceForCurrentUser": null
+				},
+				"errors": [
+					{
+						"message": "failed to add device to current user: assert.AnError general error for testing",
+						"path": ["addDeviceForCurrentUser"]
+					}
+				]
 			}`,
 		},
 	}

@@ -29,5 +29,5 @@ type Storage interface {
 	DeleteUser(ctx context.Context, id int64) error
 
 	// AddDevice add new device for user
-	AddDevice(ctx context.Context, userId int64, input model.Device) (model.Device, error)
+	AddDevice(ctx context.Context, userID int64, input model.Device) (model.Device, error)
 }

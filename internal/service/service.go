@@ -30,7 +30,7 @@ type Service interface {
 	DeleteUser(ctx context.Context, id int64) error
 
 	// AddDevice add new device for user
-	AddDevice(ctx context.Context, userId int64, device model.Device) (model.Device, error)
+	AddDevice(ctx context.Context, userID int64, device model.Device) (model.Device, error)
 }
 
 type service struct {
@@ -79,6 +79,13 @@ func (s *service) DeleteUser(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (s *service) AddDevice(ctx context.Context, userId int64, device model.Device) (model.Device, error) {
-	return model.Device{}, nil
+func (s *service) AddDevice(ctx context.Context, userID int64, device model.Device) (model.Device, error) {
+	d, err := s.s.AddDevice(ctx, userID, device)
+	if err != nil {
+		if err == storage.ErrNotFound {
+			return model.Device{}, ErrNotFound
+		}
+		return model.Device{}, fmt.Errorf("failed to add device: %w", err)
+	}
+	return d, nil
 }

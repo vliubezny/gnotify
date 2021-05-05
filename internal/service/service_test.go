@@ -190,3 +190,68 @@ func TestService_DeleteUser(t *testing.T) {
 		})
 	}
 }
+
+func TestService_AddDevice(t *testing.T) {
+	inputDevice := model.Device{
+		Name: "Chrome",
+		Settings: model.NotificationSettings{
+			Frequency:    model.Daily,
+			PriceChanged: true,
+		},
+	}
+
+	testCases := []struct {
+		desc     string
+		input    model.Device
+		deviceID string
+		rErr     error
+		err      error
+	}{
+		{
+			desc:     "success",
+			input:    inputDevice,
+			deviceID: "12345",
+			rErr:     nil,
+			err:      nil,
+		},
+		{
+			desc:     "ErrNotFound",
+			input:    inputDevice,
+			deviceID: "12345",
+			rErr:     storage.ErrNotFound,
+			err:      ErrNotFound,
+		},
+		{
+			desc:     "unexpected error",
+			input:    inputDevice,
+			deviceID: "12345",
+			rErr:     assert.AnError,
+			err:      assert.AnError,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.desc, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			id := int64(1)
+
+			st := mock.NewMockStorage(ctrl)
+			st.EXPECT().AddDevice(ctx, id, tc.input).
+				DoAndReturn(func(ctx context.Context, userID int64, d model.Device) (model.Device, error) {
+					d.ID = tc.deviceID
+					return d, tc.rErr
+				})
+
+			s := New(st)
+
+			d, err := s.AddDevice(ctx, id, tc.input)
+			assert.True(t, errors.Is(err, tc.err), fmt.Sprintf("wanted %s got %s", tc.err, err))
+
+			if tc.err == nil {
+				tc.input.ID = tc.deviceID
+				assert.Equal(t, tc.input, d)
+			}
+		})
+	}
+}

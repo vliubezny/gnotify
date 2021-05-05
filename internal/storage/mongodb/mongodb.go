@@ -133,7 +133,7 @@ func (s *mongoStorage) DeleteUser(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (s *mongoStorage) AddDevice(ctx context.Context, userId int64, input model.Device) (model.Device, error) {
+func (s *mongoStorage) AddDevice(ctx context.Context, userID int64, input model.Device) (model.Device, error) {
 	d := device{
 		ID:           primitive.NewObjectID(),
 		Name:         input.Name,
@@ -141,7 +141,7 @@ func (s *mongoStorage) AddDevice(ctx context.Context, userId int64, input model.
 		Frequency:    input.Settings.Frequency,
 	}
 
-	r := s.db.Collection(users).FindOneAndUpdate(ctx, bson.M{"id": userId},
+	r := s.db.Collection(users).FindOneAndUpdate(ctx, bson.M{"id": userID},
 		bson.M{
 			"$push": bson.D{
 				{Key: "devices", Value: d},

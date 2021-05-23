@@ -87,7 +87,7 @@ type RootResolver struct {
 
 // CurrentUser resolves current user data.
 func (r *RootResolver) CurrentUser(ctx context.Context) (*userResolver, error) {
-	p := ctx.Value(principalKey{}).(auth.Principal)
+	p := auth.FromContext(ctx)
 	u, err := r.svc.GetUser(ctx, p.UserID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to resolve current user: %w", err)
@@ -106,7 +106,7 @@ func (r *RootResolver) AddDeviceForCurrentUser(
 	ctx context.Context,
 	args struct{ Device deviceInput },
 ) (*deviceResolver, error) {
-	p := ctx.Value(principalKey{}).(auth.Principal)
+	p := auth.FromContext(ctx)
 
 	input := model.Device{
 		Name: args.Device.Name,

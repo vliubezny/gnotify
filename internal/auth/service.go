@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"errors"
 	"fmt"
 
@@ -14,16 +15,28 @@ const (
 	issuer     = "gstore.auth"
 )
 
+var (
+	// ErrInvalidToken states that provided token is invalid.
+	ErrInvalidToken = errors.New("invalid token")
+)
+
+type principalKey struct{}
+
 // Principal represents authenticated user and its roles.
 type Principal struct {
 	UserID  int64
 	IsAdmin bool
 }
 
-var (
-	// ErrInvalidToken states that provided token is invalid.
-	ErrInvalidToken = errors.New("invalid token")
-)
+// Propagate returns copy of parent context with principal value.
+func (p Principal) Propagate(ctx context.Context) context.Context {
+	return context.WithValue(ctx, principalKey{}, p)
+}
+
+// FromContext extracts principal form context or panics.
+func FromContext(ctx context.Context) Principal {
+	return ctx.Value(principalKey{}).(Principal)
+}
 
 // Authenticator authenthicates user by token.
 type Authenticator interface {

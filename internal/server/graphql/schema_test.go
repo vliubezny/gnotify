@@ -118,7 +118,7 @@ func TestSchema_currentUser(t *testing.T) {
 			s, err := NewSchema(svc)
 			require.NoError(t, err)
 
-			c := context.WithValue(ctx, principalKey{}, tc.principal)
+			c := tc.principal.Propagate(ctx)
 
 			svc.EXPECT().GetUser(gomock.Any(), tc.principal.UserID).Return(tc.rUser, tc.rErr)
 
@@ -229,7 +229,7 @@ func TestSchema_addDeviceForCurrentUser(t *testing.T) {
 			s, err := NewSchema(svc)
 			require.NoError(t, err)
 
-			c := context.WithValue(ctx, principalKey{}, tc.principal)
+			c := tc.principal.Propagate(ctx)
 
 			svc.EXPECT().AddDevice(gomock.Any(), tc.principal.UserID, gomock.Any()).
 				DoAndReturn(func(ctx context.Context, id int64, device model.Device) (model.Device, error) {

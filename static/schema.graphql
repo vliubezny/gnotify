@@ -1,5 +1,6 @@
 schema {
   query: Query
+  mutation: Mutation
 }
 
 type Query {
@@ -37,4 +38,14 @@ enum Frequency {
   DAILY
   WEEKLY
   NEVER
+}
+
+type Mutation {
+  addDeviceForCurrentUser(device: DeviceInput!): Device
+}
+
+input DeviceInput {
+  name: String!
+  priceChanged: Boolean!
+  frequency: Frequency!
 }

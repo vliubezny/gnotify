@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -43,4 +44,14 @@ func mustCreateAccessToken(p Principal) string {
 		panic(err)
 	}
 	return token
+}
+
+func TestPrincipal_Propagate(t *testing.T) {
+	p := Principal{UserID: 120}
+
+	ctx := p.Propagate(context.Background())
+
+	extracted := FromContext(ctx)
+
+	assert.Equal(t, p, extracted)
 }

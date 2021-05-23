@@ -13,8 +13,6 @@ import (
 
 type loggerKey struct{}
 
-type principalKey struct{}
-
 // loggerMiddleware populates request context with logger and logs request entry.
 func loggerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +62,7 @@ func jwtAuthMiddleware(authenticator auth.Authenticator) func(http.Handler) http
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), principalKey{}, principal)
+			ctx := principal.Propagate(r.Context())
 			ctx = context.WithValue(ctx, loggerKey{}, l.WithField("userID", principal.UserID))
 
 			next.ServeHTTP(w, r.WithContext(ctx))

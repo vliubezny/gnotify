@@ -29,11 +29,12 @@ image:
 .PHONY: clean
 clean:
 	rm -rf $(OUT_DIR)
+	go clean -testcache
 
 .PHONY: test
 test: GO_TEST_FLAGS := -race
 test:
-	go test -mod=vendor $(GO_TEST_FLAGS) $(GO_TEST_TAGS) ./...
+	go test -v -mod=vendor $(GO_TEST_FLAGS) $(GO_TEST_TAGS) ./...
 
 .PHONY: fulltest
 fulltest: GO_TEST_TAGS := -tags=integration

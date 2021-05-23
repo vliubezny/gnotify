@@ -176,7 +176,7 @@ github.com/sirupsen/logrus/hooks/test
 ## explicit
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require
-# github.com/testcontainers/testcontainers-go v0.10.0
+# github.com/testcontainers/testcontainers-go v0.10.1-0.20210331130832-54854fb15ccb
 ## explicit
 github.com/testcontainers/testcontainers-go
 github.com/testcontainers/testcontainers-go/wait

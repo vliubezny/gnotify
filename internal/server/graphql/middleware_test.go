@@ -119,7 +119,7 @@ func Test_jwtAuthMiddleware(t *testing.T) {
 			}
 
 			h := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				p := r.Context().Value(principalKey{})
+				p := auth.FromContext(r.Context())
 				assert.Equal(t, principal, p)
 
 				w.WriteHeader(http.StatusOK)

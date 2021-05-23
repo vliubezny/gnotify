@@ -10,6 +10,7 @@ import (
 	graphql "github.com/graph-gophers/graphql-go"
 	"github.com/sirupsen/logrus"
 	"github.com/vliubezny/gnotify/internal/auth"
+	"github.com/vliubezny/gnotify/internal/service"
 )
 
 type server struct {
@@ -17,8 +18,8 @@ type server struct {
 }
 
 // SetupRouter setups routes and handlers.
-func SetupRouter(r chi.Router, authenticator auth.Authenticator) error {
-	s, err := NewSchema()
+func SetupRouter(r chi.Router, authenticator auth.Authenticator, svc service.Service) error {
+	s, err := NewSchema(svc)
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,10 @@
+//+build integration
+
 package mongodb
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"testing"
@@ -12,6 +15,7 @@ import (
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
 	"github.com/vliubezny/gnotify/internal/model"
+	"github.com/vliubezny/gnotify/internal/storage"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -58,7 +62,7 @@ func setup() func() {
 
 	uri := fmt.Sprintf("mongodb://%s:%s", host, port)
 
-	s, err := New(uri)
+	s, err := New(uri, "gnotify")
 	if err != nil {
 		logrus.WithError(err).Fatal("failed to setup mongodb storage")
 	}
@@ -73,13 +77,20 @@ func setup() func() {
 	return shutdownFn
 }
 
+func cleanup(t *testing.T) {
+	_, err := ms.db.Collection(users).DeleteMany(ctx, bson.D{})
+	require.NoError(t, err)
+}
+
 func TestMongoStorage_GetUser(t *testing.T) {
+	defer cleanup(t)
+
 	u := model.User{
 		ID:       1,
 		Language: "en",
 	}
 
-	_, err := ms.client.Database(db).Collection(users).InsertOne(ctx, bson.D{
+	_, err := ms.db.Collection(users).InsertOne(ctx, bson.D{
 		{Key: "id", Value: u.ID},
 		{Key: "lang", Value: u.Language},
 	})
@@ -89,4 +100,103 @@ func TestMongoStorage_GetUser(t *testing.T) {
 
 	require.NoError(t, err)
 	assert.Equal(t, u, user)
+
+	_, err = ms.GetUser(ctx, 100500)
+	assert.True(t, errors.Is(err, storage.ErrNotFound), fmt.Sprintf("wanted %s got %s", storage.ErrNotFound, err))
+}
+
+func TestMongoStorage_UpsertUser(t *testing.T) {
+	defer cleanup(t)
+
+	newUser := model.User{
+		ID:       1,
+		Language: "en",
+	}
+
+	require.NoError(t, ms.UpsertUser(ctx, newUser))
+
+	user, err := ms.GetUser(ctx, newUser.ID)
+	require.NoError(t, err)
+	assert.Equal(t, newUser, user)
+
+	newUser.Language = "by"
+	require.NoError(t, ms.UpsertUser(ctx, newUser))
+
+	user, err = ms.GetUser(ctx, newUser.ID)
+	require.NoError(t, err)
+	assert.Equal(t, newUser, user)
+}
+
+func TestMongoStorage_GetUsers(t *testing.T) {
+	defer cleanup(t)
+
+	us, err := ms.GetUsers(ctx)
+	require.NoError(t, err)
+	assert.Empty(t, us)
+
+	users := []model.User{
+		{ID: 1, Language: "en"},
+		{ID: 2, Language: "by"},
+	}
+
+	require.NoError(t, ms.UpsertUser(ctx, users[0]))
+	require.NoError(t, ms.UpsertUser(ctx, users[1]))
+
+	us, err = ms.GetUsers(ctx)
+	require.NoError(t, err)
+	assert.Equal(t, users, us)
+}
+
+func TestMongoStorage_DeleteUser(t *testing.T) {
+	defer cleanup(t)
+
+	u := model.User{
+		ID:       1,
+		Language: "en",
+	}
+
+	require.NoError(t, ms.UpsertUser(ctx, u))
+
+	err := ms.DeleteUser(ctx, u.ID)
+	require.NoError(t, err)
+
+	_, err = ms.GetUser(ctx, u.ID)
+	assert.True(t, errors.Is(err, storage.ErrNotFound), fmt.Sprintf("wanted %s got %s", storage.ErrNotFound, err))
+
+	err = ms.DeleteUser(ctx, 100500)
+	assert.True(t, errors.Is(err, storage.ErrNotFound), fmt.Sprintf("wanted %s got %s", storage.ErrNotFound, err))
+}
+
+func TestMongoStorage_AddDevice(t *testing.T) {
+	defer cleanup(t)
+
+	newUser := model.User{
+		ID:       1,
+		Language: "en",
+	}
+
+	require.NoError(t, ms.UpsertUser(ctx, newUser))
+
+	inputDevice := model.Device{
+		Name: "Chrome",
+		Settings: model.NotificationSettings{
+			Frequency:    model.Daily,
+			PriceChanged: true,
+		},
+	}
+
+	newDevice, err := ms.AddDevice(ctx, newUser.ID, inputDevice)
+	require.NoError(t, err)
+
+	assert.NotEmpty(t, newDevice.ID)
+	assert.Equal(t, inputDevice.Name, newDevice.Name)
+	assert.Equal(t, inputDevice.Settings, newDevice.Settings)
+
+	user, err := ms.GetUser(ctx, newUser.ID)
+	require.NoError(t, err)
+
+	if assert.NotEmpty(t, user.Devices) {
+		assert.Equal(t, inputDevice.Name, user.Devices[0].Name)
+		assert.Equal(t, inputDevice.Settings, user.Devices[0].Settings)
+	}
 }
